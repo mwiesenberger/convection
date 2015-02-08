@@ -14,11 +14,11 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="QLabel" name="LabelOriginal">
+   <widget class="QLabel" name="webcam">
     <property name="geometry">
      <rect>
-      <x>36</x>
-      <y>20</y>
+      <x>20</x>
+      <y>50</y>
       <width>320</width>
       <height>240</height>
      </rect>
@@ -34,6 +34,9 @@
     </property>
     <property name="text">
      <string/>
+    </property>
+    <property name="textInteractionFlags">
+     <set>Qt::NoTextInteraction</set>
     </property>
    </widget>
    <widget class="QLabel" name="LabelProcessed">
@@ -58,7 +61,7 @@
      <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="pauseButton">
+   <widget class="QPushButton" name="resetButton">
     <property name="geometry">
      <rect>
       <x>120</x>
@@ -68,16 +71,16 @@
      </rect>
     </property>
     <property name="text">
-     <string>Pause</string>
+     <string>reset</string>
     </property>
    </widget>
    <widget class="QPlainTextEdit" name="TextField">
     <property name="geometry">
      <rect>
-      <x>44</x>
+      <x>360</x>
       <y>12</y>
-      <width>597</width>
-      <height>429</height>
+      <width>281</width>
+      <height>451</height>
      </rect>
     </property>
     <property name="textInteractionFlags">
@@ -104,7 +107,7 @@
      <x>0</x>
      <y>0</y>
      <width>671</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

@@ -1,5 +1,5 @@
 #include <QString>
-#include <omp.h>
+//#include <omp.h>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "convection_solver.h"
@@ -7,11 +7,11 @@
 typedef typename Convection_Solver::Matrix_Type Matrix;
 
 MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    QMainWindow(parent), window(new Window(0)),
+    ui(new Ui::MainWindow), capWebCam(0)
 {
     ui->setupUi(this);
-    capWebCam.open(0);
+    //capWebCam.open(0);
     if( !capWebCam.isOpened()){
         ui->TextField->appendPlainText("error: Webcam not accessed succesfully!\n");
         return;
@@ -20,7 +20,8 @@ MainWindow::MainWindow(QWidget *parent) :
     capWebCam.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
     tmrTimer = new QTimer(this); //if this is deleted so will be Timer
     connect( tmrTimer, SIGNAL(timeout()), this, SLOT( processFrameAndUpdateGUI()));
-    tmrTimer->start(20); //starts the timer and emit a timeout signal every 20ms (50Hz), but only when event loop (exec()) is running
+    connect( ui->startButton, SIGNAL(clicked()), this, SLOT( startButton_clicked()));
+    connect( ui->resetButton, SIGNAL(clicked()), this, SLOT( resetButton_clicked()));
 
     //default parameters
     Parameter p;
@@ -28,8 +29,8 @@ MainWindow::MainWindow(QWidget *parent) :
     p.R = 5000;
     p.nu = 0.01;
     p.amp = 10000;
-    p.nz = 64;
-    p.nx = 512;
+    p.nz = 32;
+    p.nx = 256;
     p.dt = 4e-6;
     p.itstp = 5;
     p.bc_z = toefl::TL_DST10;
@@ -58,6 +59,8 @@ MainWindow::~MainWindow()
 {
     delete ui;
     delete solver;
+    delete window;
+    //window is deleted because child of MainWindow
 }
 
 void MainWindow::processFrameAndUpdateGUI(){
@@ -80,10 +83,16 @@ void MainWindow::processFrameAndUpdateGUI(){
     cv::cvtColor( matOriginal, matOriginal, CV_BGR2RGB); //change for qt rgb image data type
 
     QImage qImgOriginal( (uchar*)matOriginal.data, matOriginal.cols, matOriginal.rows, matOriginal.step, QImage::Format_RGB888);
-    QImage qImgProcessed( (uchar*)matProcessed.data, matProcessed.cols, matProcessed.rows, matProcessed.step, QImage::Format_Indexed8);
+    ui->webcam->setPixmap( QPixmap::fromImage(qImgOriginal));
 
-    ui->LabelOriginal->setPixmap( QPixmap::fromImage(qImgOriginal));
-    ui->LabelProcessed->setPixmap( QPixmap::fromImage(qImgProcessed));
+    window->updateBuffer( matField);
+    const Matrix& field = solver->getField( TEMPERATURE);
+
+    matField.create( field.rows(), field.cols(), CV_32FC1);
+    for( unsigned i=0; i<field.rows(); i++)
+        for( unsigned j=0; j<field.cols(); j++)
+            matField.at<float>(i,j) = field(i,j);
+
     for(unsigned i=0; i<solver->parameter().itstp; i++)
     {
         solver->step(); //here is the timestep
@@ -92,21 +101,23 @@ void MainWindow::processFrameAndUpdateGUI(){
 
 }
 
-void MainWindow::on_pushButton_clicked() {
-    if( tmrTimer->isActive() ) 
+void MainWindow::startButton_clicked() {
+    if( !tmrTimer->isActive())
+    {
+        tmrTimer->start(20); //starts the timer and emit a timeout signal every 20ms (50Hz), but only when event loop (exec()) is running
+        window->show();
+        ui->startButton->setText("pause");
+    }
+    else
     {
         tmrTimer->stop();
         ui->startButton->setText("resume");
     }
-    else
-    {
-        tmrTimer->start( 20); //restart timer
-        ui->startButton->setText("pause");
-    }
 }
 
-void MainWindow::on_restart_clicked() {
-
+void MainWindow::resetButton_clicked() {
+    window->hide();
+    ui->startButton->setText("start");
     Parameter p = read( "input.txt");
     //reallocate ressources
     delete solver;

@@ -21,7 +21,7 @@ struct Parameter
     unsigned nz; 
     double lx; 
     double lz; 
-    double h; 
+    double h;
     double dt;
     unsigned itstp;
     enum toefl::bc bc_z;

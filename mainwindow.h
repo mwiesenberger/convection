@@ -3,6 +3,7 @@
 
 #include <QTimer>
 #include <QMainWindow>
+#include "window.h"
 #include "opencv2/opencv.hpp"
 
 //#include "convection_solver.h"
@@ -12,7 +13,7 @@ typedef Convection_Solver Solver;
 //typedef typename Solver::Matrix_Type Matrix;
 
 namespace Ui {
-class MainWindow;
+class MainWindow; //forward declare the ui functionality class
 }
 
 class MainWindow : public QMainWindow
@@ -24,16 +25,15 @@ public:
     ~MainWindow();
 
 private:
-    Ui::MainWindow *ui; //gives access to ui widgets from designer
+    Ui::MainWindow *ui; //gives access to ui widgets from designer via pimpl
+    Window * window;
 
     Solver * solver;
 
     cv::VideoCapture capWebCam;
     cv::Mat matOriginal;
     cv::Mat matProcessed;
-
-    QImage qimageOriginal;
-    QImage qimageProcessed;
+    cv::Mat matField;
 
     std::vector<cv::Vec3f> vecBlueCircles;
     std::vector<cv::Vec3f>::iterator itrBlueCircles;
@@ -46,8 +46,8 @@ public slots:
     void processFrameAndUpdateGUI();
 
 private slots:
-    void on_pushButton_clicked();
-    void on_restart_clicked();
+    void startButton_clicked();
+    void resetButton_clicked();
 
 };
 

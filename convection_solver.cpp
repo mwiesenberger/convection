@@ -1,4 +1,8 @@
 #include "convection_solver.h"
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 
 Parameter read( char const * file)
 {
@@ -21,7 +25,7 @@ Parameter read( char const * file)
     p.itstp = para[8];
     p.bc_z = toefl::TL_DST10;
     omp_set_num_threads( para[11]);
-    std::cout<< "With "<<omp_get_max_threads()<<" threads\n";
+    //std::cout<< "With "<<omp_get_max_threads()<<" threads\n";
 
     p.lz = 1.;
     p.h = p.lz / (double)p.nz;
