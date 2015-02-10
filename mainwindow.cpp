@@ -26,7 +26,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //default parameters
     Parameter p;
     p.P = 1;
-    p.R = 5000;
+    p.R = 500000;
     p.nu = 0.01;
     p.amp = 10000;
     p.nz = 32;
@@ -85,13 +85,16 @@ void MainWindow::processFrameAndUpdateGUI(){
     QImage qImgOriginal( (uchar*)matOriginal.data, matOriginal.cols, matOriginal.rows, matOriginal.step, QImage::Format_RGB888);
     ui->webcam->setPixmap( QPixmap::fromImage(qImgOriginal));
 
-    window->updateBuffer( matField);
-    const Matrix& field = solver->getField( TEMPERATURE);
 
-    matField.create( field.rows(), field.cols(), CV_32FC1);
-    for( unsigned i=0; i<field.rows(); i++)
-        for( unsigned j=0; j<field.cols(); j++)
-            matField.at<float>(i,j) = field(i,j);
+    const Matrix* field = &solver->getField( TEMPERATURE);
+    std::vector<double> visual( field->rows()*field->cols());
+
+    //add gradient and swap z direction
+    for( unsigned i=0; i<field->rows(); i++)
+        for( unsigned j=0; j<field->cols(); j++)
+            visual[i*field->cols()+j] = (*field)(field->rows() -  1 - i,j) + solver->parameter().R*(-0.5+(double)i/(double)(field->rows() + 1));
+
+    window->updateBuffer( visual, field->cols(), field->rows(), solver->parameter().R/2.);
 
     for(unsigned i=0; i<solver->parameter().itstp; i++)
     {
