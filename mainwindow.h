@@ -3,6 +3,8 @@
 
 #include <QTimer>
 #include <QMainWindow>
+#include <QFileDialog>
+#include <QTextStream>
 #include "window.h"
 #include "opencv2/opencv.hpp"
 
@@ -48,6 +50,9 @@ public slots:
 private slots:
     void startButton_clicked();
     void resetButton_clicked();
+    void saveAction_triggered();
+    void loadAction_triggered();
+    void exitAction_triggered();
 
 };
 

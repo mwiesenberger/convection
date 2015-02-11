@@ -41,7 +41,7 @@ struct Parameter
     }
 };
 
-Parameter read( char const * file);
+Parameter read(const std::string &str);
 
 typedef std::complex<double> Complex;
 

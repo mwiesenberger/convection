@@ -4,12 +4,11 @@
 #endif
 
 
-Parameter read( char const * file)
+Parameter read( const std::string& str)
 {
-    std::cout << "Reading from "<<file<<"\n";
     Parameter p;
     std::vector<double> para;
-    try{ para = file::read_input( file); }
+    try{ para = file::read_input( str); }
     catch (toefl::Message& m)
     {
         m.display();
@@ -24,7 +23,7 @@ Parameter read( char const * file)
     p.dt = para[7];
     p.itstp = para[8];
     p.bc_z = toefl::TL_DST10;
-    omp_set_num_threads( para[11]);
+    omp_set_num_threads( para[9]);
     //std::cout<< "With "<<omp_get_max_threads()<<" threads\n";
 
     p.lz = 1.;
