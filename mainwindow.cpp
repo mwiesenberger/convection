@@ -1,5 +1,5 @@
 #include <QString>
-//#include <omp.h>
+#include <omp.h>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "convection_solver.h"
@@ -10,7 +10,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent), window(new Window(0)),
     ui(new Ui::MainWindow), capWebCam(0)
 {
-    ui->setupUi(this);
+    ui->setupUi(this); //creates user interface
     //capWebCam.open(0);
     if( !capWebCam.isOpened()){
         ui->textField->append("error: Webcam not accessed succesfully!\n");
@@ -30,7 +30,7 @@ MainWindow::MainWindow(QWidget *parent) :
     p.dt = 4e-6;
     p.itstp = 5;
     p.bc_z = toefl::TL_DST10; //dst 2
-    omp_set_num_threads( 1);
+    omp_set_num_threads( 2);
     p.lz = 1.;
     p.h = p.lz / (double)p.nz;
     p.lx = (double)p.nx * p.h;
@@ -47,7 +47,7 @@ MainWindow::MainWindow(QWidget *parent) :
 6) nx (grid points in x, best 2^n)     = 256\n\
 7) dt (time step)                      = 4e-6\n\
 8) itstp (steps between output)        = 5\n\
-9) OMP_NUM_THREADS                     = 1\n"
+9) OMP_NUM_THREADS                     = 2\n"
 );
 
     solver = new Solver( p);

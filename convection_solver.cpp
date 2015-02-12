@@ -180,11 +180,11 @@ template< enum toefl::stepper S>
 void Convection_Solver::step_()
 {
     phi.initGhostCells(  );
-    toefl::GhostMatrix<double, toefl::TL_DFT> ghostdens{ rows, cols, param.bc_z, toefl::TL_PERIODIC, toefl::TL_VOID};
     //1. Compute nonlinearity
 #pragma omp parallel for
     for( unsigned k=0; k<2; k++)
     {
+        toefl::GhostMatrix<double, toefl::TL_DFT> ghostdens{ rows, cols, param.bc_z, toefl::TL_PERIODIC, toefl::TL_VOID};
         swap_fields( dens[k], ghostdens); //now dens[k] is void
         ghostdens.initGhostCells( );
         arakawa( phi, ghostdens, nonlinear[k]);

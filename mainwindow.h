@@ -15,7 +15,7 @@ typedef Convection_Solver Solver;
 //typedef typename Solver::Matrix_Type Matrix;
 
 namespace Ui {
-class MainWindow; //forward declare the ui functionality class
+    class MainWindow; //forward declare the ui functionality class
 }
 
 class MainWindow : public QMainWindow

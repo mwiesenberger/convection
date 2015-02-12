@@ -77,28 +77,24 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="QLabel" name="label">
-   <property name="geometry">
-    <rect>
-     <x>4</x>
-     <y>176</y>
-     <width>757</width>
-     <height>221</height>
-    </rect>
-   </property>
-   <property name="autoFillBackground">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
-   <property name="scaledContents">
-    <bool>true</bool>
-   </property>
-   <property name="textInteractionFlags">
-    <set>Qt::NoTextInteraction</set>
-   </property>
-  </widget>
+  <layout class="QHBoxLayout" name="horizontalLayout">
+   <item>
+    <widget class="QLabel" name="label">
+     <property name="autoFillBackground">
+      <bool>true</bool>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="scaledContents">
+      <bool>false</bool>
+     </property>
+     <property name="textInteractionFlags">
+      <set>Qt::NoTextInteraction</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
  </widget>
  <resources/>
  <connections/>

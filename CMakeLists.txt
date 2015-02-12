@@ -8,8 +8,8 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set( CMAKE_AUTOMOC ON)
 #set( CMAKE_AUTOUIC ON)
 find_package(Qt5Widgets REQUIRED)
-find_package(Qt5Core REQUIRED)
-find_package(Qt5Gui REQUIRED)
+#find_package(Qt5Core REQUIRED)
+#find_package(Qt5Gui REQUIRED)
 #QT5_WRAP_CPP(convection_HEADERS_MOC ${convection_HEADERS})
 QT5_WRAP_UI(convection_FORMS_HEADERS ${convection_FORMS})
 #include(${QT_USE_FILE})
@@ -20,7 +20,7 @@ add_executable(convection
  ${convection_SOURCES}
  ${convection_FORMS_HEADERS})
 
-qt5_use_modules( convection Widgets Core Gui)
+qt5_use_modules( convection Widgets) #Core Gui)
 ########################set up the rest#######################
 set( CMAKE_BUILD_TYPE Debug)
 find_package( OpenCV REQUIRED)  # find well-known library for which cmake has config files for many platforms
@@ -45,6 +45,4 @@ target_link_libraries(convection ${FFTW_LIB})
 
 set( CMAKE_CXX_FLAGS "-std=c++0x")
 ###############Set compiler flags for OpenMP support##############
-#if( OpenMP)
 set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-#endif()
