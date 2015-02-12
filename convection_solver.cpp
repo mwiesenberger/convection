@@ -43,17 +43,17 @@ inline void laplace_inverse( double& l_inv, const Complex dx, const Complex dy)
 }
 
 inline void Convection_Solver::step(){ step_<toefl::TL_ORDER3>();}
-void Convection_Solver::setHeat( double x0, double y0, double sigma_x, double sigma_y, double amp){
-if( x0 >= 0 && x0 < param.lx && y0 >= 0 && y0 < param.lz)
-    x0_ = x0, y0_ = y0, sigma_x_ = sigma_x, sigma_y_ = sigma_y, amp_ = amp;
-else
-    std::cerr << "x0 or y0 is not within the boundaries!\n";
-}
+//void Convection_Solver::setHeat( std::vector<double> x0, std::vector<double> y0, std::vector<double> sigma_x, std::vector<double> sigma_y, std::vector<double> amp){
+////if( x0 >= 0 && x0 < param.lx && y0 >= 0 && y0 < param.lz)
+//    x0_ = x0, y0_ = y0, sigma_x_ = sigma_x, sigma_y_ = sigma_y, amp_ = amp;
+////else
+//    //std::cerr << "x0 or y0 is not within the boundaries!\n";
+//}
 
 Convection_Solver::Convection_Solver( const Parameter& p):
     rows( p.nz ), cols( p.nx ),
     crows( rows), ccols( cols/2+1),
-    x0_(0), y0_(0), sigma_x_(0), sigma_y_(0), amp_(0),
+    //x0_(0), amp_(0),
     param( p),
     //fields
     dens( toefl::MatrixArray<double, toefl::TL_DFT, 2>::construct( rows, cols)), nonlinear( dens),
@@ -176,8 +176,11 @@ void Convection_Solver::compute_cphi()
             cphi(i,j) = phi_coeff(i,j)*cdens[1](i,j);
 }
 
+inline void Convection_Solver::step(const Matrix_Type& src){ 
+    step_<toefl::TL_ORDER3>(&src);
+}
 template< enum toefl::stepper S>
-void Convection_Solver::step_()
+void Convection_Solver::step_(const Matrix_Type* src )
 {
     phi.initGhostCells(  );
     //1. Compute nonlinearity
@@ -190,10 +193,11 @@ void Convection_Solver::step_()
         arakawa( phi, ghostdens, nonlinear[k]);
         swap_fields( dens[k], ghostdens); //now ghostdens is void
     }
-    if( amp_ != 0)
-    {
-        init_gaussian( dens[0], x0_, y0_, sigma_x_, sigma_y_, amp_);
-    }
+    if( src != nullptr)
+        for( unsigned i=0; i<rows; i++)
+            for(unsigned j=0; j<cols; j++)
+                dens[0](i,j) += src->operator()(i,j); //not exactly correct but who cares?
+                //init_gaussian( dens[0], x0_[i][0], x0_[i][1], x0_[i][2], x0_[i][2], amp_[i]);
     //2. perform karniadakis step
     karniadakis.step_i<S>( dens, nonlinear);
     //3. solve linear equation

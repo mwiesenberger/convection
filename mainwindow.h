@@ -37,10 +37,8 @@ private:
     cv::Mat matProcessed;
     cv::Mat matField;
 
-    std::vector<cv::Vec3f> vecBlueCircles;
-    std::vector<cv::Vec3f>::iterator itrBlueCircles;
-    std::vector<cv::Vec3f> vecRedCircles;
-    std::vector<cv::Vec3f>::iterator itrRedCircles;
+    std::vector<cv::Vec3f> red;
+    std::vector<cv::Vec3f> blue;
 
     QTimer* tmrTimer;
 

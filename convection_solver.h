@@ -78,6 +78,7 @@ class Convection_Solver
     void init( std::array< toefl::Matrix<double,toefl::TL_DFT>, 2>& v, enum target t);
     /*! @brief Perform a step by the 3 step Karniadakis scheme*/
     void step();
+    void step( const Matrix_Type& src);
     /*! @brief Get the result
         
         You get the solution matrix of the current timestep.
@@ -108,7 +109,7 @@ class Convection_Solver
         @note You cannot change parameters once constructed.
      */
     const Parameter& parameter() const { return param;}
-    void setHeat( double x0, double y0, double sigma_x, double sigma_y, double amp);
+    //void setHeat( double x0, double y0, double sigma_x, double sigma_y, double amp);
   private:
     typedef std::complex<double> complex;
     //methods
@@ -116,11 +117,11 @@ class Convection_Solver
     void compute_cphi();//multiply cphi
     void first_steps(); 
     template< enum toefl::stepper S>
-    void step_();
+    void step_(const Matrix_Type* src = nullptr);
     //members
     const size_t rows, cols;
     const size_t crows, ccols;
-    double x0_, y0_, sigma_x_, sigma_y_, amp_;
+    //std::vector<double> x0_,  amp_;
     const Parameter param;
     /////////////////fields//////////////////////////////////
     //GhostMatrix<double, TL_DFT> ghostdens, ghostphi;
