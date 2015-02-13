@@ -167,7 +167,7 @@
      <x>0</x>
      <y>0</y>
      <width>806</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -178,6 +178,7 @@
     <addaction name="actionLoad"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
+    <addaction name="actionSetColors"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -191,6 +192,7 @@
    <addaction name="actionSave"/>
    <addaction name="actionLoad"/>
    <addaction name="actionExit"/>
+   <addaction name="actionSetColors"/>
   </widget>
   <action name="actionSave">
    <property name="text">
@@ -205,6 +207,11 @@
   <action name="actionExit">
    <property name="text">
     <string>Exit</string>
+   </property>
+  </action>
+  <action name="actionSetColors">
+   <property name="text">
+    <string>SetColors</string>
    </property>
   </action>
  </widget>

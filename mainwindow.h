@@ -36,6 +36,7 @@ private:
     cv::Mat matOriginal;
     cv::Mat matProcessed;
     cv::Mat matField;
+    cv::Scalar redMin, redMax, blueMin, blueMax;
 
     std::vector<cv::Vec3f> red;
     std::vector<cv::Vec3f> blue;
@@ -52,6 +53,7 @@ private slots:
     void loadAction_triggered();
     void exitAction_triggered();
 
+    void on_actionSetColors_triggered();
 };
 
 #endif // MAINWINDOW_H

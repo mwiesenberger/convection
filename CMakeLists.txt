@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 2.8.8)
 project(Convection)
 ##################set up Qt cmake environment#####################
-set(convection_SOURCES main.cpp mainwindow.cpp window.cpp)
-set(convection_HEADERS mainwindow.h window.h) # all headers for moc compiler
-set(convection_FORMS mainwindow.ui window.ui) # all headers for moc compiler
+set(convection_SOURCES main.cpp mainwindow.cpp window.cpp colors.cpp)
+set(convection_HEADERS mainwindow.h window.h colors.h) # all headers for moc compiler
+set(convection_FORMS mainwindow.ui window.ui colors.ui) # all headers for moc compiler
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set( CMAKE_AUTOMOC ON)
 #set( CMAKE_AUTOUIC ON)
