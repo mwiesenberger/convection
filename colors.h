@@ -15,7 +15,7 @@ class Colors : public QDialog
 
 public:
     explicit Colors(QWidget *parent = 0);
-    void getRanges( cv::Scalar& rmin, cv::Scalar& rmax, cv::Scalar& bmin, cv::Scalar& bmax);
+    void getRanges( cv::Scalar& bmin, cv::Scalar& bmax);
     ~Colors();
 
 private:
@@ -24,7 +24,7 @@ private:
     cv::VideoCapture webCam;
     cv::Mat current, currentHSV;
     cv::Mat red, blue;
-    cv::Scalar redMin, redMax, blueMin, blueMax;
+    cv::Scalar blueMin, blueMax;
 
 private slots:
     void processFrameAndUpdate();

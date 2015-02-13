@@ -20,6 +20,8 @@ MainWindow::MainWindow(QWidget *parent) :
     capWebCam.set(CV_CAP_PROP_FRAME_WIDTH, 320);
     capWebCam.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
     tmrTimer = new QTimer(this); //if this is deleted so will be Timer
+    blueMin = cv::Scalar( 110, 40 , 40);
+    blueMax = cv::Scalar( 130, 255, 255);
     //default parameters
     Parameter p;
     p.P = 1;
@@ -95,7 +97,7 @@ void MainWindow::processFrameAndUpdateGUI(){
     Matrix src( solver->parameter().nz, solver->parameter().nx, 0.);
 
     cv::cvtColor(matOriginal, matProcessed, CV_BGR2HSV );
-    cv::inRange( matProcessed, redMin, redMax, matProcessed); //if Pixel is in Range 1, 0 else, type CV_8U, (tracks red color)
+    cv::inRange( matProcessed, blueMin, blueMax, matProcessed); //if Pixel is in Range 1, 0 else, type CV_8U, (tracks red color)
     cv::GaussianBlur( matProcessed, matProcessed, cv::Size(7,7), 0,0); //smooth edges
     cv::HoughCircles( matProcessed, red, CV_HOUGH_GRADIENT, 2, matProcessed.rows/4, 200, 100, 0,0); //vecRedCircles contains x,y,r for each detected circle, minimum distance between circles = rows/4, min/max_radius to be detected = 0 (unknown)
     for( unsigned i=0; i<red.size(); i++)
@@ -117,12 +119,12 @@ void MainWindow::processFrameAndUpdateGUI(){
         //for( unsigned j=4; j<nx-4; j++)
             //src(i,j) = cvSrc.at<float>(i,j)*solver->parameter().amp;
 
+    cv::cvtColor( matOriginal, matOriginal, CV_BGR2RGB); //change for qt rgb image data type
     QPixmap qPixProcessedRed = QPixmap::fromImage(QImage((uchar*)cvSrc.data, cvSrc.cols, cvSrc.rows, cvSrc.step, QImage::Format_Indexed8));
     //ui->webcam_2->setPixmap( qPixProcessedRed.scaled( nx, nz));
     cv::inRange( matOriginal, blueMin , blueMax, matProcessed); //if Pixel is in Range 1, 0 else, type CV_8U, (tracks blue color)
     cv::GaussianBlur( matProcessed, matProcessed, cv::Size(9,9), 1.5); //smooth edges
     cv::HoughCircles( matProcessed, blue, CV_HOUGH_GRADIENT, 2, matProcessed.rows/4, 200, 100, 0,0); //vecRedCircles contains x,y,r for each detected circle, minimum distance between circles = rows/4, min/max_radius to be detected = 0 (unknown)
-    cv::cvtColor( matOriginal, matOriginal, CV_BGR2RGB); //change for qt rgb image data type
     //for( unsigned i=0; i<blue.size(); i++)
     //    init_gaussian( src, blue[i][0]/webCamWidth*lx, blue[i][1]/webCamHeight*lz, 0.07/lx, 0.07, solver->parameter().amp);
     text.clear();
@@ -226,7 +228,7 @@ void MainWindow::on_actionSetColors_triggered()
     dialog->setModal(true);
     dialog->exec();
     if( dialog->result() == QDialog::Accepted )
-        dialog->getRanges(redMin, redMax, blueMin, blueMax);
+        dialog->getRanges(blueMin, blueMax);
     capWebCam.open(0);
 
 }
