@@ -6,6 +6,8 @@ Colors::Colors(QWidget *parent) :
     ui(new Ui::Colors)
 {
     webCam.open(0);
+    webCam.set(CV_CAP_PROP_FRAME_WIDTH, 320);
+    webCam.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
     ui->setupUi(this);
     timer = new QTimer(this);
     timer->start(20);
@@ -20,9 +22,9 @@ Colors::~Colors()
     delete ui;
 }
 
-void Colors::getRanges(cv::Scalar &bmin, cv::Scalar &bmax)
+void Colors::getRanges(cv::Scalar &bmin, cv::Scalar &bmax, int& dilute)
 {
-    bmin = blueMin, bmax = blueMax;
+    bmin = blueMin, bmax = blueMax, dilute = kkk;
 }
 
 void Colors::processFrameAndUpdate( )
@@ -33,14 +35,10 @@ void Colors::processFrameAndUpdate( )
     webCam >> current;
     cv::Mat shiftedHSV;
     cv::cvtColor(current, currentHSV, CV_BGR2HSV);
-    cv::cvtColor(current, current, CV_BGR2RGB);
+    cv::cvtColor(current, current,    CV_BGR2RGB);
     cv::cvtColor(current, shiftedHSV, CV_BGR2HSV);
-    //cv::cvtColor(current, current, CV_BGR2RGB);
-
-
 
     int bhmin = ui->bhmin->value(), bhmax = ui->bhmax->value();
-    //setup dilate and erode and 60degree angle shift for red
 
     blueMin = cv::Scalar( bhmin, ui->bsmin->value(), ui->bvmin->value());
     blueMax = cv::Scalar( bhmax, ui->bsmax->value(), ui->bvmax->value());
@@ -48,21 +46,34 @@ void Colors::processFrameAndUpdate( )
     //redMax = cv::Scalar( ui->rhmax->value(), ui->rsmax->value(), ui->rvmax->value());
     cv::inRange(currentHSV, blueMin, blueMax, blue );
     cv::inRange(shiftedHSV, blueMin, blueMax, red );
-
-    int kkk = ui->dilute->value();
+    //erode and dilate to reduce noise
+    kkk = ui->dilute->value();
     cv::Size ksize( 2*kkk+1, 2*kkk+1 );
     cv::Point anchor( kkk, kkk );
     cv::Mat element = cv::getStructuringElement(cv::MORPH_ELLIPSE, ksize, anchor);
-
     cv::erode(  red, red, element, anchor, 1 );
-    //ksize = cv::Size( 2*kkk + 9, 2*kkk+9);
-    //ksanchor.x = ( kkk+4);
-    //ksanchor.y = ( kkk+4);
-    //element = cv::getStructuringElement(cv::MORPH_ELLIPSE, ksize, anchor);
     cv::dilate( red, red, element, anchor, 1 );
-
     cv::erode(  blue, blue, element, anchor, 1);
     cv::dilate( blue, blue, element, anchor, 1);
+    //find circles
+    std::vector<cv::Vec3f> redC, blueC;
+    cv::GaussianBlur( red, red, cv::Size(7,7), 0,0); //smooth edges
+    cv::GaussianBlur( blue, blue, cv::Size(7,7), 0,0); //smooth edges
+    cv::HoughCircles( red, redC, CV_HOUGH_GRADIENT, 2, red.rows/4, 200, 100, 0,0); //vecRedCircles contains x,y,r for each detected circle, minimum distance between circles = rows/4, min/max_radius to be detected = 0 (unknown)
+    cv::HoughCircles( blue, blueC, CV_HOUGH_GRADIENT, 2, blue.rows/4, 200, 100, 0,0); //vecRedCircles contains x,y,r for each detected circle, minimum distance between circles = rows/4, min/max_radius to be detected = 0 (unknown)
+    //show circles
+    for( unsigned i=0; i<redC.size(); i++)
+    {
+        cv::circle(current, cv::Point((int)redC[i][0], (int)redC[i][1]), 7, cv::Scalar( 0, 0, 255), -1);
+        cv::circle(current, cv::Point((int)redC[i][0], (int)redC[i][1]), (int)redC[i][2] , cv::Scalar( 0, 0, 255), 1);
+    }
+
+    for( unsigned i=0; i<blueC.size(); i++)
+    {
+        cv::circle(current, cv::Point((int)blueC[i][0], (int)blueC[i][1]), 7, cv::Scalar( 255, 0, 0), -1);
+        cv::circle(current, cv::Point((int)blueC[i][0], (int)blueC[i][1]), (int)blueC[i][2] , cv::Scalar( 255, 0, 0), 1);
+    }
+    //show images
     QPixmap qPixCurrent = QPixmap::fromImage(QImage((uchar*)current.data, current.cols, current.rows, current.step, QImage::Format_RGB888 ));
     ui->camera->setPixmap(qPixCurrent.scaled(w,h,Qt::KeepAspectRatio));
     QPixmap qPixRed = QPixmap::fromImage(QImage((uchar*)red.data, red.cols, red.rows, red.step, QImage::Format_Indexed8));

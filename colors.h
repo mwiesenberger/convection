@@ -15,10 +15,11 @@ class Colors : public QDialog
 
 public:
     explicit Colors(QWidget *parent = 0);
-    void getRanges( cv::Scalar& bmin, cv::Scalar& bmax);
+    void getRanges( cv::Scalar& bmin, cv::Scalar& bmax, int& dilute);
     ~Colors();
 
 private:
+    int kkk; //dilute size
     Ui::Colors *ui;
     QTimer* timer;
     cv::VideoCapture webCam;

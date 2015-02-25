@@ -33,13 +33,14 @@ private:
     Solver * solver;
 
     cv::VideoCapture capWebCam;
-    cv::Mat matOriginal;
+    cv::Mat current;
     cv::Mat matProcessed;
     cv::Mat matField;
     cv::Scalar blueMin, blueMax;
 
-    std::vector<cv::Vec3f> red;
-    std::vector<cv::Vec3f> blue;
+    cv::Mat red;
+    cv::Mat blue;
+    int dilute;
 
     QTimer* tmrTimer;
 

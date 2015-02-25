@@ -20,6 +20,7 @@ MainWindow::MainWindow(QWidget *parent) :
     capWebCam.set(CV_CAP_PROP_FRAME_WIDTH, 320);
     capWebCam.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
     tmrTimer = new QTimer(this); //if this is deleted so will be Timer
+    tmrTimer->start(20);
     blueMin = cv::Scalar( 110, 40 , 40);
     blueMax = cv::Scalar( 130, 255, 255);
     //default parameters
@@ -83,92 +84,110 @@ MainWindow::~MainWindow()
     delete ui;
     delete solver;
     delete window;
+    delete tmrTimer;
 }
 
 void MainWindow::processFrameAndUpdateGUI(){
-    capWebCam >> matOriginal;
+    capWebCam >> current;
+    cv::Mat shiftedHSV, currentHSV;
+    cv::cvtColor(current, currentHSV, CV_BGR2HSV);
+    cv::cvtColor(current, current,    CV_BGR2RGB);
+    cv::cvtColor(current, shiftedHSV, CV_BGR2HSV);
+    cv::inRange(currentHSV, blueMin, blueMax, blue );
+    cv::inRange(shiftedHSV, blueMin, blueMax, red );
+    //erode and dilate to reduce noise
+    int kkk = dilute;
+    cv::Size ksize( 2*kkk+1, 2*kkk+1 );
+    cv::Point anchor( kkk, kkk );
+    cv::Mat element = cv::getStructuringElement(cv::MORPH_ELLIPSE, ksize, anchor);
+    cv::erode(  red, red, element, anchor, 1 );
+    cv::dilate( red, red, element, anchor, 1 );
+    cv::erode(  blue, blue, element, anchor, 1);
+    cv::dilate( blue, blue, element, anchor, 1);
+    //find circles
+    std::vector<cv::Vec3f> redC, blueC;
+    cv::GaussianBlur( red, red, cv::Size(7,7), 0,0); //smooth edges
+    cv::GaussianBlur( blue, blue, cv::Size(7,7), 0,0); //smooth edges
+    cv::HoughCircles( red, redC, CV_HOUGH_GRADIENT, 2, red.rows/4, 200, 100, 0,0); //vecRedCircles contains x,y,r for each detected circle, minimum distance between circles = rows/4, min/max_radius to be detected = 0 (unknown)
+    cv::HoughCircles( blue, blueC, CV_HOUGH_GRADIENT, 2, blue.rows/4, 200, 100, 0,0); //vecRedCircles contains x,y,r for each detected circle, minimum distance between circles = rows/4, min/max_radius to be detected = 0 (unknown)
+    //show circles
+    for( unsigned i=0; i<redC.size(); i++)
+    {
+        cv::circle(current, cv::Point((int)redC[i][0], (int)redC[i][1]), 7, cv::Scalar( 0, 0, 255), -1);
+        cv::circle(current, cv::Point((int)redC[i][0], (int)redC[i][1]), (int)redC[i][2] , cv::Scalar( 0, 0, 255), 1);
+    }
+
+    for( unsigned i=0; i<blueC.size(); i++)
+    {
+        cv::circle(current, cv::Point((int)blueC[i][0], (int)blueC[i][1]), 7, cv::Scalar( 255, 0, 0), -1);
+        cv::circle(current, cv::Point((int)blueC[i][0], (int)blueC[i][1]), (int)blueC[i][2] , cv::Scalar( 255, 0, 0), 1);
+    }
+
+    //show circles in scaled image
     unsigned nx = solver->parameter().nx;
     unsigned nz = solver->parameter().nz;
-    double webCamWidth = matOriginal.cols;
-    double webCamHeight = matOriginal.rows;
+    unsigned nxC = current.cols;
+    unsigned nzC = current.rows;
     double lx = solver->parameter().lx;
     double lz = solver->parameter().lz;
-    if( matOriginal.empty()) return;
-    Matrix src( solver->parameter().nz, solver->parameter().nx, 0.);
 
-    cv::cvtColor(matOriginal, matProcessed, CV_BGR2HSV );
-    cv::inRange( matProcessed, blueMin, blueMax, matProcessed); //if Pixel is in Range 1, 0 else, type CV_8U, (tracks red color)
-    cv::GaussianBlur( matProcessed, matProcessed, cv::Size(7,7), 0,0); //smooth edges
-    cv::HoughCircles( matProcessed, red, CV_HOUGH_GRADIENT, 2, matProcessed.rows/4, 200, 100, 0,0); //vecRedCircles contains x,y,r for each detected circle, minimum distance between circles = rows/4, min/max_radius to be detected = 0 (unknown)
-    for( unsigned i=0; i<red.size(); i++)
-        init_gaussian( src, red[i][0]/webCamWidth*lx, red[i][1]/webCamHeight*lz, 0.07/lx, 0.07, solver->parameter().amp);
+    cv::Mat share(nz, nx, CV_8UC3, cv::Scalar(0, 0, 0));
+    //show circles
+    for( unsigned i=0; i<redC.size(); i++)
+        cv::circle(share, cv::Point((int)(redC[i][0]/nxC*nx), (int)(redC[i][1]/nzC*nz)), 4, cv::Scalar( 255, 0, 0), -1);
 
-    QString text;
-    QTextStream textStream(&text);
-    textStream << "red circles: ";
-    for( unsigned i=0; i<red.size(); i++)
-        textStream << red[i][0] << " " << red[i][1];
+    for( unsigned i=0; i<blueC.size(); i++)
+        cv::circle(share, cv::Point((int)(blueC[i][0]/nxC*nx), (int)(blueC[i][1]/nzC*nz)), 4, cv::Scalar( 0, 0, 255), -1);
+    QPixmap pixmap = QPixmap::fromImage(QImage( share.data, nx, nz, QImage::Format_RGB888));
+    int w = ui->webcam_2->width();
+    int h = ui->webcam_2->height();
+    ui->webcam_2->setPixmap( pixmap.scaled( w, h, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    //////////////////////show webcam image and found circles
+    int webCamWidth = current.cols;
+    int webCamHeight = current.rows;
+    QPixmap qPixCurrent = QPixmap::fromImage(QImage((uchar*)current.data, current.cols, current.rows, current.step, QImage::Format_RGB888 ));
+    ui->webcam->setPixmap(qPixCurrent.scaled(webCamWidth,webCamHeight,Qt::KeepAspectRatio));
 
-    ui->webcam_2->setText(text);
+    //show simulation and make some more steps//////////
 
-    cv::Mat cvSrc;
-    cv::Size size( nx, nz);
-    cv::resize( matProcessed, cvSrc, size);
-    //matProcessed.copyTo(cvSrc);
-    //for( unsigned i=4; i<nz-4; i++)
-        //for( unsigned j=4; j<nx-4; j++)
-            //src(i,j) = cvSrc.at<float>(i,j)*solver->parameter().amp;
-
-    cv::cvtColor( matOriginal, matOriginal, CV_BGR2RGB); //change for qt rgb image data type
-    QPixmap qPixProcessedRed = QPixmap::fromImage(QImage((uchar*)cvSrc.data, cvSrc.cols, cvSrc.rows, cvSrc.step, QImage::Format_Indexed8));
-    //ui->webcam_2->setPixmap( qPixProcessedRed.scaled( nx, nz));
-    cv::inRange( matOriginal, blueMin , blueMax, matProcessed); //if Pixel is in Range 1, 0 else, type CV_8U, (tracks blue color)
-    cv::GaussianBlur( matProcessed, matProcessed, cv::Size(9,9), 1.5); //smooth edges
-    cv::HoughCircles( matProcessed, blue, CV_HOUGH_GRADIENT, 2, matProcessed.rows/4, 200, 100, 0,0); //vecRedCircles contains x,y,r for each detected circle, minimum distance between circles = rows/4, min/max_radius to be detected = 0 (unknown)
-    //for( unsigned i=0; i<blue.size(); i++)
-    //    init_gaussian( src, blue[i][0]/webCamWidth*lx, blue[i][1]/webCamHeight*lz, 0.07/lx, 0.07, solver->parameter().amp);
-    text.clear();
-    textStream << "blue circles: ";
-    for( unsigned i=0; i<red.size(); i++)
-        textStream << blue[i][0] << " " << blue[i][1];
-    ui->webcam_3->setText(text);
-
-    QImage qImgOriginal( (uchar*)matOriginal.data, matOriginal.cols, matOriginal.rows, matOriginal.step, QImage::Format_RGB888);
-    QPixmap qPixProcessedBlue = QPixmap::fromImage(QImage((uchar*)matProcessed.data, matProcessed.cols, matProcessed.rows, matProcessed.step, QImage::Format_Indexed8));
-    ui->webcam->setPixmap( QPixmap::fromImage(qImgOriginal));
-    //ui->webcam_3->setPixmap( qPixProcessedBlue.scaled(nx, nz));
-
-
-
-    const Matrix* field = &solver->getField( TEMPERATURE);
-    std::vector<double> visual( field->rows()*field->cols());
-
-    //add gradient and swap z direction
-    for( unsigned i=0; i<field->rows(); i++)
-        for( unsigned j=0; j<field->cols(); j++)
-            visual[i*field->cols()+j] = (*field)(field->rows() -  1 - i,j) + solver->parameter().R*(-0.5+(double)i/(double)(field->rows() + 1));
-
-    window->updateBuffer( visual, field->cols(), field->rows(), solver->parameter().R/2.);
-
-    //init_gaussian( src, 0.5, 0.5, 0.07/lx, 0.07, -solver->parameter().amp);
-    for(unsigned i=0; i<solver->parameter().itstp; i++)
+    if( window->isVisible())
     {
-        solver->step(src); //here is the timestep
+        const Matrix* field = &solver->getField( TEMPERATURE);
+        std::vector<double> visual( field->rows()*field->cols());
+        //add gradient and swap z direction
+        for( unsigned i=0; i<field->rows(); i++)
+            for( unsigned j=0; j<field->cols(); j++)
+                visual[i*field->cols()+j] = (*field)(field->rows() -  1 - i,j) + solver->parameter().R*(-0.5+(double)i/(double)(field->rows() + 1));
+        //show simulation
+        window->updateBuffer( visual, field->cols(), field->rows(), solver->parameter().R/2.);
+
+        Matrix src( solver->parameter().nz, solver->parameter().nx, 0.);
+        for( unsigned i=0; i<redC.size(); i++)
+            init_gaussian( src, 1.-redC[i][0]/nxC , 1.-redC[i][1]/nzC, 0.07/lx, 0.07, solver->parameter().amp);
+
+        for( unsigned i=0; i<blueC.size(); i++)
+            init_gaussian( src, 1.-blueC[i][0]/nxC, 1.-blueC[i][1]/nzC, 0.07/lx, 0.07, -solver->parameter().amp);
+
+        for(unsigned i=0; i<solver->parameter().itstp; i++)
+        {
+            solver->step(src); //here is the timestep
+        }
     }
 
 
 }
 
 void MainWindow::startButton_clicked() {
-    if( !tmrTimer->isActive())
+    if( !window->isVisible())
     {
-        tmrTimer->start(20); //starts the timer and emit a timeout signal every 20ms (50Hz), but only when event loop (exec()) is running
+        //tmrTimer->start(20); //starts the timer and emit a timeout signal every 20ms (50Hz), but only when event loop (exec()) is running
         window->show();
         ui->startButton->setText("pause");
     }
     else
     {
-        tmrTimer->stop();
+        window->hide();
+        //tmrTimer->stop();
         ui->startButton->setText("resume");
     }
 }
@@ -223,12 +242,17 @@ void MainWindow::exitAction_triggered()
 
 void MainWindow::on_actionSetColors_triggered()
 {
+    tmrTimer->stop();
     capWebCam.release();
     Colors* dialog = new Colors(this);
     dialog->setModal(true);
     dialog->exec();
     if( dialog->result() == QDialog::Accepted )
-        dialog->getRanges(blueMin, blueMax);
+        dialog->getRanges(blueMin, blueMax, dilute);
+    delete dialog;
     capWebCam.open(0);
+    capWebCam.set(CV_CAP_PROP_FRAME_WIDTH, 320);
+    capWebCam.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
+    tmrTimer->start(20);
 
 }
