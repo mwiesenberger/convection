@@ -1,0 +1,18 @@
+Two-dimensional interactive Rayleigh-Benard convection. 
+The idea is to control a heat source in the convection cell
+via a natural user interface.
+
+In this program a webcam tracks a red or blue ball. The ball position is used
+to place a source into the convection cell and the color determines its sign. 
+
+The numerical part is based on the toefl spectral library, 
+which is part of FELTOR
+http://www.github.com/mwiesenberger/feltor
+and uses fftw
+http://www.fftw.org
+
+The GUI is written with QT5 
+http://qt-project.org/
+and the computer vision algorithms are provided by OpenCV
+http://opencv.org/
+
