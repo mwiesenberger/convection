@@ -1,4 +1,6 @@
-Two-dimensional interactive Rayleigh-Benard convection. 
+Two-dimensional interactive Rayleigh-Benard convection 
+======================================================
+
 The idea is to control a heat source in the convection cell
 via a natural user interface.
 
